@@ -1,6 +1,9 @@
 blink
 build
+Listings
+Objects
 *_exe
 *.bin
 *.map
 *.py
+*.uv*
