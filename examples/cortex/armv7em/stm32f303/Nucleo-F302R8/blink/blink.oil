@@ -22,7 +22,7 @@ CPU blink {
     BUILD = TRUE {
       TRAMPOLINE_BASE_PATH = "../../../../../..";
       APP_SRC = "blink.c";
-      APP_NAME = "blink_exe";
+      APP_NAME = "keil_debug.axf";
       CFLAGS  = "-O0";
       LDFLAGS = "-Map=blink.map";
       COMPILER = "arm-none-eabi-gcc";
@@ -42,42 +42,68 @@ CPU blink {
   
   APPMODE std {};
   
-  TASK blink {
+  TASK uart_rx {
     PRIORITY = 1;
     AUTOSTART = FALSE;
     ACTIVATION = 1;
     SCHEDULE = FULL;
+    RESOURCE = led_resource;
   };
   
-  ALARM blink_blink {
+  ALARM alarm_uart_rx {
     COUNTER = SystemCounter;
     ACTION = ACTIVATETASK {
-      TASK = blink;
+      TASK = uart_rx;
     };
     AUTOSTART = TRUE {
       APPMODE = std;
-      ALARMTIME = 50;
-      CYCLETIME = 50;
+      ALARMTIME = 3;
+      CYCLETIME = 3;
     };
   };
 
-  TASK blink_gate {
+  TASK led_control {
     PRIORITY = 1;
     AUTOSTART = FALSE;
     ACTIVATION = 1;
     SCHEDULE = FULL;
+    RESOURCE = led_resource;
   };
   
-  ALARM blink_blink_gate {
+  ALARM alarm_led_control {
     COUNTER = SystemCounter;
     ACTION = ACTIVATETASK {
-      TASK = blink_gate;
+      TASK = led_control;
     };
     AUTOSTART = TRUE {
       APPMODE = std;
-      ALARMTIME = 1000;
-      CYCLETIME = 1500;
+      ALARMTIME = 1;
+      CYCLETIME = 1;
     };
+  };
+
+  TASK cmd_process {
+    PRIORITY = 1;
+    AUTOSTART = FALSE;
+    ACTIVATION = 1;
+    SCHEDULE = FULL;
+    RESOURCE = led_resource;
+  };
+  
+  ALARM alarm_cmd_process {
+    COUNTER = SystemCounter;
+    ACTION = ACTIVATETASK {
+      TASK = cmd_process;
+    };
+    AUTOSTART = TRUE {
+      APPMODE = std;
+      ALARMTIME = 2;
+      CYCLETIME = 10;
+    };
+  };
+
+  RESOURCE led_resource {
+    RESOURCEPROPERTY = STANDARD;
   };
 };
 

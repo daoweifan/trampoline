@@ -455,6 +455,7 @@ CPU stm32f303 {
     CFILE = "stm32f30x_exti.c";
     CFILE = "stm32f30x_syscfg.c";
     CFILE = "stm32f30x_misc.c";
+    CFILE = "stm32f30x_usart.c";
   };
 
   POSTBUILD all {
