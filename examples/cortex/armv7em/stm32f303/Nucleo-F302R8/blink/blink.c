@@ -19,9 +19,48 @@ void initUserLed()
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_Init(GPIOB, &GPIO_InitStructure);
+}
+
+//init PC.13 as output (User Button on pin 13).
+void initUserButton()
+{
+  GPIO_InitTypeDef  GPIO_InitStructure;
+  NVIC_InitTypeDef NVIC_InitStructure;
+  EXTI_InitTypeDef EXTI_InitStructure;
+
+  /* Enable the GPIO_BUTTON Clock */
+  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOC, ENABLE);
+
+  /* Enable the EXTI Clock */
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
+
+  /* Configure the GPIO_BUTTON pin */
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+  GPIO_Init(GPIOC, &GPIO_InitStructure);
+
+  /* Connect Button EXTI Line to Button GPIO Pin */
+  SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOC, EXTI_PinSource13);
+
+  /* Configure Button EXTI line */
+  EXTI_InitStructure.EXTI_Line = EXTI_Line13;
+  EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
+  EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+  EXTI_Init(&EXTI_InitStructure);
+
+  /* Enable and set Button EXTI Interrupt to the lowest priority */
+  NVIC_InitStructure.NVIC_IRQChannel = EXTI15_10_IRQn;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x0F;
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x0F;
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+
+  NVIC_Init(&NVIC_InitStructure); 
 }
 
 //baudrate
@@ -94,10 +133,11 @@ void uart_Init(const uart_cfg_t *cfg)
 
 #if 0
   /* Configure the NVIC Preemption Priority Bits */  
-  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_0);
+  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_3);
   /* Enable the USART2 Interrupt */
   NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3;
+  // NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_InitStructure);
   USART_ClearFlag(uart, USART_FLAG_RXNE);
@@ -129,6 +169,15 @@ static int uart_putchar(int data)
   return 0;
 }
 
+static int uart_print(unsigned char * str, int num)
+{
+  int i;
+  for (i=0; i<num; i++)
+    uart_putchar(str[i]);
+
+  return 0;
+}
+
 static int uart_IsNotEmpty(void)
 {
   int ret;
@@ -153,12 +202,13 @@ FUNC(int, OS_APPL_CODE) main(void)
 {
   uart_cfg_t cfg = UART_CFG_DEF;
   initUserLed();
+  initUserButton();
   uart_Init(&cfg);
   StartOS(OSDEFAULTAPPMODE);
   return 0;
 }
 
-// DeclareResource(led_resource);
+DeclareResource(uart_resource);
 
 typedef enum
 {
@@ -208,6 +258,7 @@ TASK(uart_rx)
 {
   unsigned char ch;
 
+  GetResource(uart_resource);
   if (uart_IsNotEmpty())
   {
     ch = uart_getch();
@@ -218,20 +269,21 @@ TASK(uart_rx)
     if (ch == '\r')
     {
       uart_putchar('\n');
-      uart_putchar('t');
-      uart_putchar('r');
-      uart_putchar('a');
-      uart_putchar('m');
-      uart_putchar('p');
-      uart_putchar('o');
-      uart_putchar('l');
-      uart_putchar('i');
-      uart_putchar('n');
-      uart_putchar('e');
-      uart_putchar('>');
-      uart_putchar(' ');
+      uart_print("trampoline> ", sizeof("trampoline> "));
     }
   }
+
+  ReleaseResource(uart_resource);
+}
+
+ISR(user_button)
+{
+  EXTI_ClearITPendingBit(EXTI_Line13);
+  EXTI_ClearFlag(EXTI_Line13);
+  GetResource(uart_resource);
+  uart_print("Button Pressed\r\n", sizeof("Button Pressed\r\n"));
+  uart_print("trampoline> ", sizeof("trampoline> "));
+  ReleaseResource(uart_resource);
 }
 
 

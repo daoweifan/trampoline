@@ -47,7 +47,7 @@ CPU blink {
     AUTOSTART = FALSE;
     ACTIVATION = 1;
     SCHEDULE = FULL;
-    RESOURCE = led_resource;
+    RESOURCE = uart_resource;
   };
   
   ALARM alarm_uart_rx {
@@ -67,7 +67,7 @@ CPU blink {
     AUTOSTART = FALSE;
     ACTIVATION = 1;
     SCHEDULE = FULL;
-    RESOURCE = led_resource;
+    RESOURCE = uart_resource;
   };
   
   ALARM alarm_led_control {
@@ -87,7 +87,7 @@ CPU blink {
     AUTOSTART = FALSE;
     ACTIVATION = 1;
     SCHEDULE = FULL;
-    RESOURCE = led_resource;
+    RESOURCE = uart_resource;
   };
   
   ALARM alarm_cmd_process {
@@ -102,7 +102,21 @@ CPU blink {
     };
   };
 
-  RESOURCE led_resource {
+  ISR user_button { //on PC13
+    CATEGORY = 2;
+    PRIORITY = 10;
+    SOURCE = EXTI15_10_IRQ { PINON13 = PC13 {TRIGGER = FALLING; PULL = NONE;};};
+    RESOURCE = uart_resource;
+  };
+
+/*  ISR uart_rx { */
+/*    CATEGORY = 1; */
+/*    PRIORITY = 1; */
+/*    SOURCE = USART2_IRQ; */
+/*    RESOURCE = uart_resource; */
+/*  }; */
+
+  RESOURCE uart_resource {
     RESOURCEPROPERTY = STANDARD;
   };
 };
