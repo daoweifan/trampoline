@@ -202,7 +202,7 @@ FUNC(int, OS_APPL_CODE) main(void)
 {
   uart_cfg_t cfg = UART_CFG_DEF;
   initUserLed();
-  initUserButton();
+  // initUserButton();
   uart_Init(&cfg);
   StartOS(OSDEFAULTAPPMODE);
   return 0;

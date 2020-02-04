@@ -118,7 +118,11 @@ foreach src in USED_EXTI do
     if typeof pin == @string then
       let portPin::TRIGGER := exists src[KEY+"_S"]::TRIGGER default ("RISING")
       let portPin::PULL := exists src[KEY+"_S"]::PULL default ("NONE")
-      let portPin::NUMBER := [pin rightSubString: 1]
+      if [pin length] == 4 then
+        let portPin::NUMBER := [pin rightSubString: 2]
+      elsif [pin length] == 3 then
+        let portPin::NUMBER := [pin rightSubString: 1]
+      end if
       let portPin::GPIO := [pin subString: 1, 1]
       let usedPortPin[pin] := portPin
       let gpio := [pin subString: 1, 1]
