@@ -131,7 +131,7 @@ void uart_Init(const uart_cfg_t *cfg)
 
   NVIC_InitTypeDef NVIC_InitStructure;
 
-#if 0
+#if 1
   /* Configure the NVIC Preemption Priority Bits */  
   NVIC_PriorityGroupConfig(NVIC_PriorityGroup_3);
   /* Enable the USART2 Interrupt */
@@ -254,9 +254,12 @@ VAR(unsigned char, AUTOMATIC) cmd_size;
 VAR(unsigned char, AUTOMATIC) cmd_head;
 VAR(unsigned char, AUTOMATIC) cmd_tail;
 
-TASK(uart_rx)
+// TASK(uart_rx)
+ISR (uart_rx)
 {
   unsigned char ch;
+
+  // USART_ClearFlag(uart, uint32_t USART_FLAG);
 
   GetResource(uart_resource);
   if (uart_IsNotEmpty())
@@ -274,6 +277,11 @@ TASK(uart_rx)
   }
 
   ReleaseResource(uart_resource);
+}
+
+FUNC (void, AUTOMATIC ) USART2_IRQ_ClearFlag(void)
+{
+  //do nothing
 }
 
 ISR(user_button)

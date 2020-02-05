@@ -42,26 +42,6 @@ CPU blink {
   
   APPMODE std {};
   
-  TASK uart_rx {
-    PRIORITY = 1;
-    AUTOSTART = FALSE;
-    ACTIVATION = 1;
-    SCHEDULE = FULL;
-    RESOURCE = uart_resource;
-  };
-  
-  ALARM alarm_uart_rx {
-    COUNTER = SystemCounter;
-    ACTION = ACTIVATETASK {
-      TASK = uart_rx;
-    };
-    AUTOSTART = TRUE {
-      APPMODE = std;
-      ALARMTIME = 3;
-      CYCLETIME = 3;
-    };
-  };
-
   TASK led_control {
     PRIORITY = 1;
     AUTOSTART = FALSE;
@@ -109,12 +89,12 @@ CPU blink {
     RESOURCE = uart_resource;
   };
 
-/*  ISR uart_rx { */
-/*    CATEGORY = 1; */
-/*    PRIORITY = 1; */
-/*    SOURCE = USART2_IRQ; */
-/*    RESOURCE = uart_resource; */
-/*  }; */
+  ISR uart_rx {
+    CATEGORY = 1;
+    PRIORITY = 11;
+    SOURCE = USART2_IRQ { EVFLAG = RXNE; };
+    RESOURCE = uart_resource;
+  };
 
   RESOURCE uart_resource {
     RESOURCEPROPERTY = STANDARD;
