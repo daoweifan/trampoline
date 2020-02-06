@@ -63,24 +63,23 @@ CPU blink {
   };
 
   TASK cmd_process {
-    PRIORITY = 1;
+    PRIORITY = 2;
     AUTOSTART = FALSE;
     ACTIVATION = 1;
     SCHEDULE = FULL;
-    RESOURCE = uart_resource;
   };
   
-  ALARM alarm_cmd_process {
-    COUNTER = SystemCounter;
-    ACTION = ACTIVATETASK {
-      TASK = cmd_process;
-    };
-    AUTOSTART = TRUE {
-      APPMODE = std;
-      ALARMTIME = 2;
-      CYCLETIME = 10;
-    };
-  };
+/*  ALARM alarm_cmd_process { */
+/*    COUNTER = SystemCounter; */
+/*    ACTION = ACTIVATETASK { */
+/*      TASK = cmd_process; */
+/*    }; */
+/*    AUTOSTART = TRUE { */
+/*      APPMODE = std; */
+/*      ALARMTIME = 2; */
+/*      CYCLETIME = 10; */
+/*    }; */
+/*  }; */
 
   ISR user_button { //on PC13
     CATEGORY = 2;
@@ -90,7 +89,7 @@ CPU blink {
   };
 
   ISR uart_rx {
-    CATEGORY = 1;
+    CATEGORY = 2;
     PRIORITY = 11;
     SOURCE = USART2_IRQ { EVFLAG = RXNE; };
     RESOURCE = uart_resource;

@@ -219,9 +219,11 @@ typedef enum
 led_state_t led_state;
 VAR(int, AUTOMATIC) blink_period_ms;
 VAR(int, AUTOMATIC) blink_timer;
+VAR(int, AUTOMATIC) led_control_task_counter;
 
 TASK(led_control)
 {
+  led_control_task_counter++;
   switch(led_state)
   {
     case LED_STATE_OFF:
@@ -244,6 +246,10 @@ TASK(led_control)
     default:
       break;
   }
+
+  // ActivateTask(cmd_process);
+
+  TerminateTask();
 }
 
 #define APP_Task_led_control_STOP_SEC_CODE
@@ -254,7 +260,8 @@ VAR(unsigned char, AUTOMATIC) cmd_size;
 VAR(unsigned char, AUTOMATIC) cmd_head;
 VAR(unsigned char, AUTOMATIC) cmd_tail;
 
-// TASK(uart_rx)
+DeclareTask(cmd_process);
+
 ISR (uart_rx)
 {
   unsigned char ch;
@@ -277,6 +284,8 @@ ISR (uart_rx)
   }
 
   ReleaseResource(uart_resource);
+
+  ActivateTask(cmd_process);
 }
 
 FUNC (void, AUTOMATIC ) USART2_IRQ_ClearFlag(void)
@@ -292,6 +301,7 @@ ISR(user_button)
   uart_print("Button Pressed\r\n", sizeof("Button Pressed\r\n"));
   uart_print("trampoline> ", sizeof("trampoline> "));
   ReleaseResource(uart_resource);
+
 }
 
 
@@ -331,9 +341,13 @@ FUNC(int, OS_APPL_CODE) chnum(char str[])
   return (num);
 }
 
+VAR(int, AUTOMATIC) cmd_process_task_counter;
+
 TASK(cmd_process)
 {
   unsigned ch;
+
+  cmd_process_task_counter++;
 
   if (cmd_head != cmd_tail)
   {
@@ -401,6 +415,8 @@ TASK(cmd_process)
       }
     }
   }
+
+  TerminateTask();
 }
 
 #define APP_Task_cmd_process_STOP_SEC_CODE
