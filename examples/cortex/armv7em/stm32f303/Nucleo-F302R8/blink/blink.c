@@ -24,45 +24,6 @@ void initUserLed()
   GPIO_Init(GPIOB, &GPIO_InitStructure);
 }
 
-//init PC.13 as output (User Button on pin 13).
-void initUserButton()
-{
-  GPIO_InitTypeDef  GPIO_InitStructure;
-  NVIC_InitTypeDef NVIC_InitStructure;
-  EXTI_InitTypeDef EXTI_InitStructure;
-
-  /* Enable the GPIO_BUTTON Clock */
-  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOC, ENABLE);
-
-  /* Enable the EXTI Clock */
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
-
-  /* Configure the GPIO_BUTTON pin */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-  GPIO_Init(GPIOC, &GPIO_InitStructure);
-
-  /* Connect Button EXTI Line to Button GPIO Pin */
-  SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOC, EXTI_PinSource13);
-
-  /* Configure Button EXTI line */
-  EXTI_InitStructure.EXTI_Line = EXTI_Line13;
-  EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
-  EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-  EXTI_Init(&EXTI_InitStructure);
-
-  /* Enable and set Button EXTI Interrupt to the lowest priority */
-  NVIC_InitStructure.NVIC_IRQChannel = EXTI15_10_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x0F;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x0F;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-
-  NVIC_Init(&NVIC_InitStructure); 
-}
-
 //baudrate
 enum {
   BAUD_300 = 300,
@@ -208,8 +169,6 @@ FUNC(int, OS_APPL_CODE) main(void)
   return 0;
 }
 
-DeclareResource(uart_resource);
-
 typedef enum
 {
   LED_STATE_OFF,
@@ -251,17 +210,21 @@ TASK(led_control)
 
   TerminateTask();
 }
-
 #define APP_Task_led_control_STOP_SEC_CODE
 #include "tpl_memmap.h"
 
+
+#define APP_ISR_uart_rx_START_SEC_VAR_POWER_ON_INIT_8BIT
+#include "tpl_memmap.h"
 VAR(unsigned char, AUTOMATIC) cmd_buf[256];
 VAR(unsigned char, AUTOMATIC) cmd_size;
 VAR(unsigned char, AUTOMATIC) cmd_head;
 VAR(unsigned char, AUTOMATIC) cmd_tail;
+#define APP_ISR_uart_rx_STOP_SEC_VAR_POWER_ON_INIT_8BIT
+#include "tpl_memmap.h"
 
-DeclareTask(cmd_process);
-
+#define APP_ISR_uart_rx_START_SEC_CODE
+#include "tpl_memmap.h"
 ISR (uart_rx)
 {
   unsigned char ch;
@@ -293,6 +256,12 @@ FUNC (void, AUTOMATIC ) USART2_IRQ_ClearFlag(void)
   //do nothing
 }
 
+#define APP_ISR_uart_rx_STOP_SEC_CODE
+#include "tpl_memmap.h"
+
+#define APP_ISR_user_button_START_SEC_CODE
+#include "tpl_memmap.h"
+
 ISR(user_button)
 {
   EXTI_ClearITPendingBit(EXTI_Line13);
@@ -301,13 +270,14 @@ ISR(user_button)
   uart_print("Button Pressed\r\n", sizeof("Button Pressed\r\n"));
   uart_print("trampoline> ", sizeof("trampoline> "));
   ReleaseResource(uart_resource);
-
 }
 
-
-#define APP_Task_cmd_process_START_SEC_CODE
+#define APP_ISR_user_button_STOP_SEC_CODE
 #include "tpl_memmap.h"
 
+
+#define APP_Task_cmd_process_START_SEC_VAR_POWER_ON_INIT_8BIT
+#include "tpl_memmap.h"
 VAR(unsigned char, AUTOMATIC) cmd_seg1[16];
 VAR(unsigned char, AUTOMATIC) cmd_seg1_index;
 VAR(unsigned char, AUTOMATIC) cmd_seg2[16];
@@ -317,6 +287,17 @@ VAR(unsigned char, AUTOMATIC) cmd_seg3_index;
 VAR(unsigned char, AUTOMATIC) cmd_seg4[16];
 VAR(unsigned char, AUTOMATIC) cmd_seg4_index;
 VAR(unsigned char, AUTOMATIC) cmd_null_number;
+#define APP_Task_cmd_process_STOP_SEC_VAR_POWER_ON_INIT_8BIT
+#include "tpl_memmap.h"
+
+#define APP_Task_cmd_process_START_SEC_VAR_POWER_ON_INIT_32BIT
+#include "tpl_memmap.h"
+VAR(int, AUTOMATIC) cmd_process_task_counter;
+#define APP_Task_cmd_process_STOP_SEC_VAR_POWER_ON_INIT_32BIT
+#include "tpl_memmap.h"
+
+#define APP_Task_cmd_process_START_SEC_CODE
+#include "tpl_memmap.h"
 
 FUNC(int, OS_APPL_CODE) str_cmp(P2VAR(unsigned char, AUTOMATIC, AUTOMATIC)src, P2VAR(unsigned char, AUTOMATIC, AUTOMATIC)dest, int size)
 {
@@ -340,8 +321,6 @@ FUNC(int, OS_APPL_CODE) chnum(char str[])
       num = num*10+str[i]-'0';
   return (num);
 }
-
-VAR(int, AUTOMATIC) cmd_process_task_counter;
 
 TASK(cmd_process)
 {

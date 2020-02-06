@@ -69,18 +69,6 @@ CPU blink {
     SCHEDULE = FULL;
   };
   
-/*  ALARM alarm_cmd_process { */
-/*    COUNTER = SystemCounter; */
-/*    ACTION = ACTIVATETASK { */
-/*      TASK = cmd_process; */
-/*    }; */
-/*    AUTOSTART = TRUE { */
-/*      APPMODE = std; */
-/*      ALARMTIME = 2; */
-/*      CYCLETIME = 10; */
-/*    }; */
-/*  }; */
-
   ISR user_button { //on PC13
     CATEGORY = 2;
     PRIORITY = 10;
