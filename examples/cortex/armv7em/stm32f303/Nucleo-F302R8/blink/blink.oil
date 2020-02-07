@@ -24,6 +24,7 @@ CPU blink {
       APP_SRC = "blink.c";
       APP_NAME = "keil_debug.axf";
       CFLAGS  = "-O0";
+      CFLAGS  = "-gdwarf-2";
       LDFLAGS = "-Map=blink.map";
       COMPILER = "arm-none-eabi-gcc";
       ASSEMBLER = "arm-none-eabi-as";
