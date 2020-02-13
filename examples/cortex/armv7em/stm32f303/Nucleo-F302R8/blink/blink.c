@@ -92,18 +92,14 @@ void uart_Init(const uart_cfg_t *cfg)
 
   NVIC_InitTypeDef NVIC_InitStructure;
 
-#if 1
-  /* Configure the NVIC Preemption Priority Bits */  
-  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_3);
-  /* Enable the USART2 Interrupt */
+  /* Enable the USART2 RX Interrupt */
   NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3;
   // NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;
+  // NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_InitStructure);
   USART_ClearFlag(uart, USART_FLAG_RXNE);
   USART_ITConfig(uart, USART_IT_RXNE, ENABLE);
-#endif
 
 #if 0
   /* Configure the NVIC Preemption Priority Bits */  
@@ -162,6 +158,10 @@ static int uart_getch(void)
 FUNC(int, OS_APPL_CODE) main(void)
 {
   uart_cfg_t cfg = UART_CFG_DEF;
+
+  /* this is for the global seting */
+  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
+
   initUserLed();
   // initUserButton();
   uart_Init(&cfg);
@@ -244,11 +244,11 @@ ISR (uart_rx)
       uart_putchar('\n');
       uart_print("trampoline> ", sizeof("trampoline> "));
     }
+
+    ActivateTask(cmd_process);
   }
 
   ReleaseResource(uart_resource);
-
-  ActivateTask(cmd_process);
 }
 
 FUNC (void, AUTOMATIC ) USART2_IRQ_ClearFlag(void)
@@ -270,6 +270,8 @@ ISR(user_button)
   uart_print("Button Pressed\r\n", sizeof("Button Pressed\r\n"));
   uart_print("trampoline> ", sizeof("trampoline> "));
   ReleaseResource(uart_resource);
+
+  CallTerminateISR2();
 }
 
 #define APP_ISR_user_button_STOP_SEC_CODE
