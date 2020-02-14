@@ -16,8 +16,8 @@ IMPLEMENTATION trampoline {
 CPU blink {
   OS config {
     STATUS = EXTENDED;
-    PAINT_STACK = TRUE;
-    PAINT_REGISTERS = TRUE;
+    PAINT_STACK = FALSE;
+    PAINT_REGISTERS = FALSE;
     
     BUILD = TRUE {
       TRAMPOLINE_BASE_PATH = "../../../../../..";

@@ -206,8 +206,6 @@ TASK(led_control)
       break;
   }
 
-  // ActivateTask(cmd_process);
-
   TerminateTask();
 }
 #define APP_Task_led_control_STOP_SEC_CODE
@@ -249,6 +247,8 @@ ISR (uart_rx)
   }
 
   ReleaseResource(uart_resource);
+
+  CallTerminateISR2();
 }
 
 FUNC (void, AUTOMATIC ) USART2_IRQ_ClearFlag(void)
